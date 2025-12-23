@@ -1,39 +1,30 @@
-from flask import Flask, Response, request, jsonify
-from livedronemirror import DetectionStream
+from flask import Flask, Response, request
+from livedronemirror import detection_stream, heatmap_stream
 import os
 
 app = Flask(__name__)
-stream_processor = DetectionStream()
 
-@app.route("/set_stream", methods=["POST"])
-def set_stream():
-    """
-    Set the RTMP or video stream URL dynamically.
-    """
-    data = request.json
-    url = data.get("url")
-    if not url:
-        return jsonify({"error": "No URL provided"}), 400
-    stream_processor.set_stream(url)
-    return jsonify({"status": "Stream URL updated"}), 200
+@app.route("/")
+def home():
+    return "NeoInnovations Drone Detection Service"
 
 @app.route("/detection")
 def detection():
-    """
-    Returns detection video feed
-    """
+    stream_url = request.args.get("url")
+    if not stream_url:
+        return "Please provide a URL parameter: ?url=RTMP_URL", 400
     return Response(
-        stream_processor.detection_stream(),
+        detection_stream(stream_url),
         mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
 @app.route("/heatmap")
 def heatmap():
-    """
-    Returns heatmap video feed
-    """
+    stream_url = request.args.get("url")
+    if not stream_url:
+        return "Please provide a URL parameter: ?url=RTMP_URL", 400
     return Response(
-        stream_processor.heatmap_stream(),
+        heatmap_stream(stream_url),
         mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
