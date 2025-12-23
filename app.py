@@ -1,30 +1,33 @@
-from flask import Flask, Response, request
+from flask import Flask, Response, request, render_template
 from livedronemirror import detection_stream, heatmap_stream
 import os
 
 app = Flask(__name__)
 
-@app.route("/")
+# Home page: accepts RTMP URL
+@app.route("/", methods=["GET", "POST"])
 def home():
-    return "NeoInnovations Drone Detection Service"
+    return render_template("index.html")
 
+# Normal detection stream
 @app.route("/detection")
 def detection():
-    stream_url = request.args.get("url")
-    if not stream_url:
-        return "Please provide a URL parameter: ?url=RTMP_URL", 400
+    rtmp_url = request.args.get("url")
+    if not rtmp_url:
+        return "Please provide RTMP URL as ?url=RTMP_URL", 400
     return Response(
-        detection_stream(stream_url),
+        detection_stream(rtmp_url),
         mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
+# Heatmap stream
 @app.route("/heatmap")
 def heatmap():
-    stream_url = request.args.get("url")
-    if not stream_url:
-        return "Please provide a URL parameter: ?url=RTMP_URL", 400
+    rtmp_url = request.args.get("url")
+    if not rtmp_url:
+        return "Please provide RTMP URL as ?url=RTMP_URL", 400
     return Response(
-        heatmap_stream(stream_url),
+        heatmap_stream(rtmp_url),
         mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
