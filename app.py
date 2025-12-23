@@ -4,9 +4,10 @@ from livedronemirror import LiveDroneMirror
 import cv2
 
 app = Flask(__name__)
-mirror = LiveDroneMirror("test.mp4")
+mirror = LiveDroneMirror()  # default dummy stream
 frames = mirror.get_processed_frames()
 
+# Get port from Railway environment
 PORT = int(os.environ.get("PORT", 5000))
 
 def generate_detection():
@@ -25,11 +26,13 @@ def generate_heatmap():
 
 @app.route("/")
 def index():
-    return Response(generate_detection(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_detection(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/heatmap")
 def heatmap():
-    return Response(generate_heatmap(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_heatmap(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT)
