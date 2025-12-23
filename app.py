@@ -6,29 +6,33 @@ import cv2
 app = Flask(__name__)
 mirror = LiveDroneMirror()
 frames = mirror.get_processed_frames()
+
+# Use dynamic PORT for Railway
 PORT = int(os.environ.get("PORT", 5000))
 
 def generate_detection():
     while True:
         det_frame, _ = next(frames)
         ret, buffer = cv2.imencode('.jpg', det_frame)
-        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' +
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' +
                buffer.tobytes() + b'\r\n')
 
 def generate_heatmap():
     while True:
         _, heat_frame = next(frames)
         ret, buffer = cv2.imencode('.jpg', heat_frame)
-        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' +
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' +
                buffer.tobytes() + b'\r\n')
 
 @app.route("/")
-def index():
+def detection_stream():
     return Response(generate_detection(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/heatmap")
-def heatmap():
+def heatmap_stream():
     return Response(generate_heatmap(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
