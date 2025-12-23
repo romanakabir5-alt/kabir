@@ -1,40 +1,27 @@
-import os
 from flask import Flask, Response
-from livedronemirror import LiveDroneMirror
-import cv2
+from livedronemirror import detection_stream, heatmap_stream
+import os
 
 app = Flask(__name__)
-mirror = LiveDroneMirror()
-frames = mirror.get_processed_frames()
-
-# Use dynamic PORT for Railway
-PORT = int(os.environ.get("PORT", 5000))
-
-def generate_detection():
-    while True:
-        det_frame, _ = next(frames)
-        ret, buffer = cv2.imencode('.jpg', det_frame)
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' +
-               buffer.tobytes() + b'\r\n')
-
-def generate_heatmap():
-    while True:
-        _, heat_frame = next(frames)
-        ret, buffer = cv2.imencode('.jpg', heat_frame)
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' +
-               buffer.tobytes() + b'\r\n')
 
 @app.route("/")
-def detection_stream():
-    return Response(generate_detection(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+def detection():
+    return Response(
+        detection_stream(),
+        mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
 
 @app.route("/heatmap")
-def heatmap_stream():
-    return Response(generate_heatmap(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+def heatmap():
+    return Response(
+        heatmap_stream(),
+        mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
+
+@app.route("/health")
+def health():
+    return "OK", 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=PORT)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

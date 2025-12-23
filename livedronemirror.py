@@ -1,44 +1,40 @@
 import cv2
 import numpy as np
-from ultralytics import YOLO
+import time
 
-# Object classes we want to detect
-CLASSES = {0: "Person", 1: "Bicycle", 2: "Car", 3: "Motorbike", 5: "Bus", 7: "Truck", 16: "Animal"}
+def _dummy_frame(text):
+    frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    cv2.putText(
+        frame,
+        text,
+        (80, 240),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 255, 0),
+        2
+    )
+    return frame
 
-class LiveDroneMirror:
-    def __init__(self):
-        # Dummy black frame for cloud (no camera)
-        self.frame = np.zeros((480, 640, 3), dtype=np.uint8)
-        # Load YOLO model (downloads automatically)
-        self.model = YOLO("yolov8n.pt")
-        # Heatmap initialization
-        self.heatmap = np.zeros((480, 640), dtype=np.float32)
+def detection_stream():
+    while True:
+        frame = _dummy_frame("DETECTION STREAM LIVE")
+        _, buffer = cv2.imencode(".jpg", frame)
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n"
+            + buffer.tobytes()
+            + b"\r\n"
+        )
+        time.sleep(0.1)
 
-    def get_processed_frames(self):
-        while True:
-            frame = self.frame.copy()
-            # Run detection
-            results = self.model(frame, conf=0.4, classes=list(CLASSES.keys()))
-            det_frame = frame.copy()
-            heat_frame = frame.copy()
-
-            for r in results:
-                for box in r.boxes:
-                    cls_id = int(box.cls[0])
-                    label = CLASSES.get(cls_id, "Object")
-                    x1, y1, x2, y2 = map(int, box.xyxy[0])
-                    cx, cy = (x1+x2)//2, (y1+y2)//2
-                    # Draw bounding box
-                    cv2.rectangle(det_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(det_frame, label, (x1, y1-8),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-                    # Update heatmap
-                    cv2.circle(self.heatmap, (cx, cy), 25, 1, -1)
-
-            # Smooth heatmap
-            self.heatmap = cv2.GaussianBlur(self.heatmap, (0,0), 15)
-            heat_norm = cv2.normalize(self.heatmap, None, 0, 255, cv2.NORM_MINMAX)
-            heat_color = cv2.applyColorMap(heat_norm.astype(np.uint8), cv2.COLORMAP_JET)
-            heat_frame = cv2.addWeighted(heat_frame, 0.6, heat_color, 0.4, 0)
-
-            yield det_frame, heat_frame
+def heatmap_stream():
+    while True:
+        frame = _dummy_frame("HEATMAP STREAM LIVE")
+        _, buffer = cv2.imencode(".jpg", frame)
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n"
+            + buffer.tobytes()
+            + b"\r\n"
+        )
+        time.sleep(0.1)
