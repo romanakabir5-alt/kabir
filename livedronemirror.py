@@ -21,11 +21,11 @@ class LiveDroneMirror:
                     cls_id = int(box.cls[0])
                     label = CLASSES.get(cls_id, "Object")
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
-                    cx, cy = (x1 + x2)//2, (y1 + y2)//2
-                    cv2.rectangle(det_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(det_frame, label, (x1, y1-8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                    cx, cy = (x1+x2)//2, (y1+y2)//2
+                    cv2.rectangle(det_frame, (x1, y1), (x2, y2), (0,255,0), 2)
+                    cv2.putText(det_frame, label, (x1,y1-8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
                     cv2.circle(self.heatmap, (cx, cy), 25, 1, -1)
-            self.heatmap = cv2.GaussianBlur(self.heatmap, (0, 0), 15)
+            self.heatmap = cv2.GaussianBlur(self.heatmap, (0,0), 15)
             heat_norm = cv2.normalize(self.heatmap, None, 0, 255, cv2.NORM_MINMAX)
             heat_color = cv2.applyColorMap(heat_norm.astype(np.uint8), cv2.COLORMAP_JET)
             heat_frame = cv2.addWeighted(heat_frame, 0.6, heat_color, 0.4, 0)
