@@ -6,9 +6,8 @@ CLASSES = {0: "Person", 1: "Bicycle", 2: "Car", 3: "Motorbike", 5: "Bus", 7: "Tr
 
 class LiveDroneMirror:
     def __init__(self):
-        # Dummy black frame for cloud deployment
-        self.frame = np.zeros((480, 640, 3), dtype=np.uint8)
-        self.model = YOLO("yolov8n.pt")  # auto-download model
+        self.frame = np.zeros((480, 640, 3), dtype=np.uint8)  # dummy frame
+        self.model = YOLO("yolov8n.pt")  # auto-download
         self.heatmap = np.zeros((480, 640), dtype=np.float32)
 
     def get_processed_frames(self):
@@ -26,7 +25,6 @@ class LiveDroneMirror:
                     cv2.rectangle(det_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                     cv2.putText(det_frame, label, (x1, y1-8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                     cv2.circle(self.heatmap, (cx, cy), 25, 1, -1)
-
             self.heatmap = cv2.GaussianBlur(self.heatmap, (0, 0), 15)
             heat_norm = cv2.normalize(self.heatmap, None, 0, 255, cv2.NORM_MINMAX)
             heat_color = cv2.applyColorMap(heat_norm.astype(np.uint8), cv2.COLORMAP_JET)
