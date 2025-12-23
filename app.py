@@ -1,26 +1,18 @@
-from flask import Flask, Response
-from livedronemirror import detection_stream, heatmap_stream
+from flask import Flask, Response, request
+from livedronemirror import generate_stream, generate_heatmap
 import os
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/detection")
 def detection():
-    return Response(
-        detection_stream(),
-        mimetype="multipart/x-mixed-replace; boundary=frame"
-    )
+    url = request.args.get("stream")
+    return Response(generate_stream(url), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 @app.route("/heatmap")
 def heatmap():
-    return Response(
-        heatmap_stream(),
-        mimetype="multipart/x-mixed-replace; boundary=frame"
-    )
-
-@app.route("/health")
-def health():
-    return "OK", 200
+    url = request.args.get("stream")
+    return Response(generate_heatmap(url), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
