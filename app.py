@@ -4,10 +4,8 @@ from livedronemirror import LiveDroneMirror
 import cv2
 
 app = Flask(__name__)
-mirror = LiveDroneMirror()  # default dummy stream
+mirror = LiveDroneMirror()
 frames = mirror.get_processed_frames()
-
-# Get port from Railway environment
 PORT = int(os.environ.get("PORT", 5000))
 
 def generate_detection():
