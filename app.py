@@ -1,36 +1,33 @@
-from flask import Flask, Response, request, render_template
-from livedronemirror import detection_stream, heatmap_stream
+from flask import Flask, Response, render_template
+from livedronemirror import generate_streams
 import os
 
 app = Flask(__name__)
 
-# Home page: accepts RTMP URL
-@app.route("/", methods=["GET", "POST"])
-def home():
+# This route serves the HTML page
+@app.route("/")
+def index():
     return render_template("index.html")
 
 # Normal detection stream
 @app.route("/detection")
 def detection():
-    rtmp_url = request.args.get("url")
-    if not rtmp_url:
-        return "Please provide RTMP URL as ?url=RTMP_URL", 400
+    det_stream, _ = generate_streams()
     return Response(
-        detection_stream(rtmp_url),
+        det_stream,
         mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
 # Heatmap stream
 @app.route("/heatmap")
 def heatmap():
-    rtmp_url = request.args.get("url")
-    if not rtmp_url:
-        return "Please provide RTMP URL as ?url=RTMP_URL", 400
+    _, heat_stream = generate_streams()
     return Response(
-        heatmap_stream(rtmp_url),
+        heat_stream,
         mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
+# Health check
 @app.route("/health")
 def health():
     return "OK", 200
